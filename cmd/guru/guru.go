@@ -169,9 +169,9 @@ func importQueryPackage(pos string, conf *loader.Config) (string, error) {
 		// Check that it's possible to load the queried package.
 		// (e.g. guru tests contain different 'package' decls in same dir.)
 		// Keep consistent with logic in loader/util.go!
-		cfg2 := *conf.Build
-		cfg2.CgoEnabled = false
-		bp, err := cfg2.Import(importPath, "", 0)
+
+		bp, err := conf.Build.Import(importPath, "", 0)
+
 		if err != nil {
 			return "", err // no files for package
 		}
@@ -197,13 +197,14 @@ func importQueryPackage(pos string, conf *loader.Config) (string, error) {
 	return importPath, nil
 }
 
-// pkgContainsFile reports whether file was among the packages Go
-// files, Test files, eXternal test files, or not found.
+// pkgContainsFile reports whether file was among the package's Go files
+// (including those that require cgo processing), Test files, eXternal test
+// files, or not found.
 func pkgContainsFile(bp *build.Package, filename string) byte {
-	for i, files := range [][]string{bp.GoFiles, bp.TestGoFiles, bp.XTestGoFiles} {
+	for i, files := range [][]string{bp.GoFiles, bp.CgoFiles, bp.TestGoFiles, bp.XTestGoFiles} {
 		for _, file := range files {
 			if sameFile(filepath.Join(bp.Dir, file), filename) {
-				return "GTX"[i]
+				return "GGTX"[i]
 			}
 		}
 	}
@@ -215,7 +216,6 @@ func pkgContainsFile(bp *build.Package, filename string) byte {
 // If needExact, it must identify a single AST subtree;
 // this is appropriate for queries that allow fairly arbitrary syntax,
 // e.g. "describe".
-//
 func parseQueryPos(lprog *loader.Program, pos string, needExact bool) (*queryPos, error) {
 	filename, startOffset, endOffset, err := parsePos(pos)
 	if err != nil {
@@ -298,12 +298,12 @@ func containsHardErrors(errors []error) bool {
 	return false
 }
 
-// allowErrors causes type errors to be silently ignored.
+// allowErrors causes type errors to be silently ignored.  Errors are allowed
+// in queries that need only type information (definition, describe, referrers)
+// but not pointer analysis.
 // (Not suitable if SSA construction follows.)
 func allowErrors(lconf *loader.Config) {
-	ctxt := *lconf.Build // copy
-	ctxt.CgoEnabled = false
-	lconf.Build = &ctxt
+	lconf.FindPackage = importCgoAsGo
 	lconf.AllowErrors = true
 	// AllErrors makes the parser always return an AST instead of
 	// bailing out after 10 errors and returning an empty ast.File.
@@ -334,16 +334,15 @@ func deref(typ types.Type) types.Type {
 // where location is derived from pos.
 //
 // pos must be one of:
-//    - a token.Pos, denoting a position
-//    - an ast.Node, denoting an interval
-//    - anything with a Pos() method:
-//         ssa.Member, ssa.Value, ssa.Instruction, types.Object, pointer.Label, etc.
-//    - a QueryPos, denoting the extent of the user's query.
-//    - nil, meaning no position at all.
+//   - a token.Pos, denoting a position
+//   - an ast.Node, denoting an interval
+//   - anything with a Pos() method:
+//     ssa.Member, ssa.Value, ssa.Instruction, types.Object, pointer.Label, etc.
+//   - a QueryPos, denoting the extent of the user's query.
+//   - nil, meaning no position at all.
 //
 // The output format is is compatible with the 'gnu'
 // compilation-error-regexp in Emacs' compilation mode.
-//
 func fprintf(w io.Writer, fset *token.FileSet, pos interface{}, format string, args ...interface{}) {
 	var start, end token.Pos
 	switch pos := pos.(type) {
@@ -398,4 +397,15 @@ func toJSON(x interface{}) []byte {
 		log.Fatalf("JSON error: %v", err)
 	}
 	return b
+}
+
+// guruImport wraps (*build.Context).Import with logic to get the
+// cgo files parsed but not processed by cgo.
+func importCgoAsGo(ctxt *build.Context, path, srcDir string, mode build.ImportMode) (*build.Package, error) {
+
+	bp, err := ctxt.Import(path, srcDir, mode)
+
+	bp.GoFiles = append(bp.GoFiles, bp.CgoFiles...)
+	bp.CgoFiles = nil
+	return bp, err
 }

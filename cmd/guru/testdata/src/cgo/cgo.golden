@@ -1,0 +1,157 @@
+-------- @definition cgo-definition-lexical-pkgname --------
+defined here as package libc
+
+-------- @definition cgo-definition-lexical-var --------
+defined here as var x
+
+-------- @definition cgo-definition-qualified-type --------
+defined here as type libc.Type
+
+-------- @definition cgo-definition-qualified-const --------
+defined here as const libc.Const
+
+-------- @definition cgo-definition-local-type --------
+defined here as type U
+
+-------- @definition cgo-definition-select-field --------
+defined here as field field int
+
+-------- @definition cgo-definition-select-method --------
+defined here as func (T).method()
+
+-------- @definition cgo-definition-other-local-file --------
+defined here as type W int
+
+-------- @definition cgo-definition-other-cgo-pkg --------
+defined here as func libc.Cfoo
+
+-------- @definition cgo-definition-other-cgo-pkg-method-level1 --------
+defined here as func (*libc.CS).Method() *libc.CT
+
+-------- @definition cgo-definition-other-cgo-pkg-method-level2 --------
+defined here as func (*libc.CT).Method()
+
+-------- @describe cgo-describe-local-type --------
+reference to type U (size 8, align 8)
+defined as struct{T}
+Methods:
+	method (U) method()
+Fields:
+	T.field int
+	T       T
+
+-------- @describe cgo-describe-other-local-file --------
+reference to type W (size 8, align 8)
+defined as int
+No methods.
+
+-------- @describe cgo-describe-other-cgo-pkg --------
+reference to func libc.Cfoo() *libc.CS
+defined here
+
+-------- @describe cgo-describe-other-cgo-pkg-method-level1 --------
+reference to method func (*libc.CS).Method() *libc.CT
+defined here
+
+-------- @describe cgo-describe-other-cgo-pkg-method-level2 --------
+reference to method func (*libc.CT).Method()
+defined here
+
+-------- @describe cgo-describe-other-cgo-pkg-type --------
+reference to var cs *libc.CS
+defined here
+Methods:
+	method (*CS) Method() *CT
+
+-------- @describe cgo-describe-other-cgo-pkg-type2 --------
+reference to var ct *libc.CT
+defined here
+Methods:
+	method (*CT) Method()
+
+-------- @freevars cgo-fv1 --------
+Free identifiers:
+type C
+const exp int
+var x int
+
+-------- @implements cgo-F --------
+interface type F
+	is implemented by pointer type *CC
+	is implemented by struct type D
+	is implemented by interface type FG
+
+-------- @implements cgo-FG --------
+interface type FG
+	is implemented by pointer type *D
+	implements F
+
+-------- @implements cgo-slice --------
+slice type []int implements only interface{}
+
+-------- @implements cgo-CC --------
+pointer type *CC
+	implements F
+
+-------- @implements cgo-starCC --------
+pointer type *CC
+	implements F
+
+-------- @implements cgo-D --------
+struct type D
+	implements F
+pointer type *D
+	implements FG
+
+-------- @implements cgo-starD --------
+pointer type *D
+	implements F
+	implements FG
+
+-------- @implements cgo-I --------
+interface type I
+	is implemented by basic type libc.Type
+
+-------- @referrers cgo-type --------
+references to type s struct{f int}
+	_ = s{}.f // @referrers cgo-ref-field "f"
+	var s2 s
+
+-------- @referrers cgo-ref-other-local-file --------
+references to type W int
+	var _ W // @definition cgo-definition-other-local-file "W"
+	var _ W // @describe cgo-describe-other-local-file "W"
+	var _ W // @referrers cgo-ref-other-local-file "W"
+
+-------- @referrers cgo-ref-package --------
+references to package libc
+	cs := libc.Cfoo()
+	cs := libc.Cfoo() // @definition cgo-definition-other-cgo-pkg "Cfoo"
+	cs := libc.Cfoo() // @describe cgo-describe-other-cgo-pkg "Cfoo"
+	var _ libc.Const // @definition cgo-definition-qualified-const "Const"
+	var _ libc.Type  // @definition cgo-definition-qualified-type "Type"
+	var v libc.Type = libc.Const // @referrers cgo-ref-package "libc"
+	var v libc.Type = libc.Const // @referrers cgo-ref-package "libc"
+	var x libc.T // @definition cgo-definition-lexical-pkgname "libc"
+
+-------- @referrers cgo-ref-method --------
+references to func (Type).Method(x *int) *int
+	_ = v.Method
+	_ = v.Method                 // @referrers cgo-ref-method "Method"
+
+-------- @referrers cgo-ref-local --------
+references to var v libc.Type
+	_ = v.Method
+	_ = v.Method                 // @referrers cgo-ref-method "Method"
+	v++
+	v++ //@referrers cgo-ref-local "v"
+
+-------- @referrers cgo-ref-field --------
+references to field f int
+	_ = s{}.f // @referrers cgo-ref-field "f"
+	s2.f = 1
+
+-------- @referrers cgo-ref-type-V --------
+references to type V int
+open testdata/src/cgo/nosuchfile.y: no such file or directory
+var u1 V

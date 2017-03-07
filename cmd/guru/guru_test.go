@@ -251,6 +251,7 @@ func TestGuru(t *testing.T) {
 		"testdata/src/what/main.go",
 		"testdata/src/whicherrs/main.go",
 		"testdata/src/softerrs/main.go",
+		"testdata/src/cgo/cgo.go",
 		// JSON:
 		// TODO(adonovan): most of these are very similar; combine them.
 		"testdata/src/calls-json/main.go",
