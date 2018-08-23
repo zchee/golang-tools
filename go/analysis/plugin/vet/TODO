@@ -1,0 +1,31 @@
+
+
+TODO:
+- rethink the vet/all command
+- split up doc.go somehow
+- Unit should provide .s file names, perhaps nonselected .go files too.
+- helpers for reading raw contents of non-Go files?
+- add helpers for reporting errors against positions in such files.
+- "go vet" does not currently run vet's asmdecl check.
+- update cmd/go/internal/vet/vetflag.go.
+- experimental checks ('shadow') are omitted from the published list.
+- printf checker is half-baked.
+- buildtag checker is its own thing.
+  can we integrate this into vet efficiently, without rereading files?
+
+- non-Go files (or raw content access to Go files):
+  should we provide content []byte, either eagerly or lazily?
+
+  The parser obviously had to do the
+  work already for the Go files, so it could be cheap.
+   Should we create a token.File and call SetContent at most once?
+   For Go files the existing API is fine. For nongo files?
+   The go vet driver can't even see .s files right now.
+
+   buildtag and asmdecl are the only two that want raw source.
+   perhaps buildtag could be refactored to:
+   a) for .go files, look only at the comments in the AST
+   b) for non.go (.s) files, look at it line by line.
+
+
+- tests

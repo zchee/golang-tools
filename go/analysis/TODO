@@ -1,0 +1,38 @@
+-*- text -*-
+
+TODO
+
+- Raw file contents.  Non-Go files.
+  Some vet checks want access to raw contents of non-Go
+  files such as assembly. We could add a field
+    NonGoFilenames []string
+  and let users read it, and even add it to unit.Fset
+  to create positions for error reporting, but the "go vet"
+  driver does not currently provide this information.
+  Should it include Go files that were not selected due
+  to build tags?  Again, go vet does not easily have this info.
+
+- show Analysis.Doc in cmd/analyze UI.
+- list plugins and their dependencies.
+- show help for each plugin
+- give an example (Like findcall) of a simple lemma in action. escape?
+- should required analyses that aren't roots get to register flags? Nope.
+
+- consider alternative CLI design: a swiss-army knife
+  with each analysis forming one subcommand, and an
+  "all" subcommand that runs them all.
+
+    analyze all --findcall.name=x <packages>
+    analyze findcall --name=x <packages>
+
+ The flag names would be disambiguated under the "all" command.
+ (Currently the tool always behaves like the "all" command.)
+ The downside is you have to say more in the common case: "analyze all"
+ (Also, "all" is a go list and go/packages wildcard; confusing)
+
+Aside:
+
+- go/ssa: rework API to allow lazy idempotent per-function construction.
+- go/packages: no args => "packages not found". improve error.
+
+

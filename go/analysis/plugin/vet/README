@@ -1,0 +1,5 @@
+
+
+This is a copy of ../vet, but with the dispatch machinery changed so
+that it visits the AST once per checker rather than once only, to
+evaluate the performance cost of making several passes.
