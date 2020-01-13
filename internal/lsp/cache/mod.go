@@ -5,11 +5,11 @@
 package cache
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -424,23 +424,21 @@ func (s *snapshot) ModTidyHandle(ctx context.Context, realfh source.FileHandle) 
 // extractModParseErrors processes the raw errors returned by modfile.Parse,
 // extracting the filenames and line numbers that correspond to the errors.
 func extractModParseErrors(ctx context.Context, uri span.URI, m *protocol.ColumnMapper, parseErr error, content []byte) (source.Error, error) {
-	re := regexp.MustCompile(`.*:([\d]+): (.+)`)
-	matches := re.FindStringSubmatch(strings.TrimSpace(parseErr.Error()))
-	if len(matches) < 3 {
-		event.Error(ctx, "could not parse golang/x/mod error message", parseErr)
+	matches := strings.SplitN(strings.TrimSpace(parseErr.Error()), ":", -1)
+	if len(matches) < 4 {
 		return source.Error{}, parseErr
 	}
 	line, err := strconv.Atoi(matches[1])
 	if err != nil {
-		return source.Error{}, parseErr
+		return source.Error{}, errors.Errorf("could not parse golang/x/mod error message: %v, %w", parseErr, err)
 	}
-	lines := strings.Split(string(content), "\n")
-	if len(lines) <= line {
+	lines := bytes.Count(content, []byte("\n"))
+	if lines <= line {
 		return source.Error{}, errors.Errorf("could not parse goland/x/mod error message, line number out of range")
 	}
 	// The error returned from the modfile package only returns a line number,
 	// so we assume that the diagnostic should be for the entire line.
-	endOfLine := len(lines[line-1])
+	endOfLine := lines - 1
 	sOffset, err := m.Converter.ToOffset(line, 0)
 	if err != nil {
 		return source.Error{}, err
@@ -454,9 +452,10 @@ func extractModParseErrors(ctx context.Context, uri span.URI, m *protocol.Column
 	if err != nil {
 		return source.Error{}, err
 	}
+	msg := strings.TrimPrefix(strings.Join(matches[2:], ":"), " ")
 	return source.Error{
 		Category: SyntaxError,
-		Message:  matches[2],
+		Message:  msg,
 		Range:    rng,
 		URI:      uri,
 	}, nil
