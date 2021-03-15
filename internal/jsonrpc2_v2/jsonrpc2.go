@@ -41,6 +41,12 @@ type Handler interface {
 	Handle(ctx context.Context, req *Request) (interface{}, error)
 }
 
+type HandlerFunc func(ctx context.Context, req *Request) (interface{}, error)
+
+func (f HandlerFunc) Handle(ctx context.Context, req *Request) (interface{}, error) {
+	return f(ctx, req)
+}
+
 type defaultHandler struct{}
 
 func (defaultHandler) Preempt(context.Context, *Request) (interface{}, error) {

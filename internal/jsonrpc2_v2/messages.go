@@ -15,6 +15,15 @@ type ID struct {
 	value interface{}
 }
 
+func (id ID) MarshalJSON() ([]byte, error) {
+	return json.Marshal(id.value)
+}
+
+func (id *ID) UnmarshalJSON(data []byte) error {
+	*id = ID{}
+	return json.Unmarshal(data, &id.value)
+}
+
 // Message is the interface to all jsonrpc2 message types.
 // They share no common functionality, but are a closed set of concrete types
 // that are allowed to implement this interface. The message types are *Request
