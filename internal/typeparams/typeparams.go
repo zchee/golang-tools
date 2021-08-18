@@ -78,7 +78,7 @@ func ForNamed(named *types.Named) []*types.TypeName {
 	return tparamsSlice(named.TParams())
 }
 
-func tparamsSlice(tparams *types.TypeParams) []*types.TypeName {
+func tparamsSlice(tparams *types.TParamList) []*types.TypeName {
 	if tparams.Len() == 0 {
 		return nil
 	}
