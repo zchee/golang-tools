@@ -199,6 +199,9 @@ type BuildOptions struct {
 	// This setting need only be customized in environments with a custom
 	// GOPACKAGESDRIVER.
 	WorkspaceFiles []string
+
+	// TestTemplatePath specifies the file name of the template used by the "AddTest" code action.
+	TestTemplatePath string
 }
 
 // Note: UIOptions must be comparable with reflect.DeepEqual.
@@ -1404,6 +1407,9 @@ func (o *Options) setOne(name string, value any) (applied []CounterPath, _ error
 
 	case "renameMovesSubpackages":
 		return setBool(&o.RenameMovesSubpackages, value)
+
+	case "testTemplatePath":
+		return nil, setString(&o.TestTemplatePath, value)
 
 	// deprecated and renamed settings
 	//

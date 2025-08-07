@@ -32,7 +32,7 @@ import (
 	"golang.org/x/tools/internal/typesinternal"
 )
 
-const testTmplString = `
+const baseTestTmplString = `
 func {{.TestFuncName}}(t *{{.TestingPackageName}}.T) {
 	{{- /* Test cases struct declaration and empty initialization. */}}
 	tests := []struct {
@@ -200,7 +200,7 @@ type testInfo struct {
 	Receiver *receiver
 }
 
-var testTmpl = template.Must(template.New("test").Funcs(template.FuncMap{
+var testTmpl = template.New("test").Funcs(template.FuncMap{
 	"add": func(a, b int) int { return a + b },
 	"last": func(slice []field) field {
 		if len(slice) == 0 {
@@ -215,7 +215,7 @@ var testTmpl = template.Must(template.New("test").Funcs(template.FuncMap{
 		}
 		return strings.Join(names, ", ")
 	},
-}).Parse(testTmplString))
+})
 
 // AddTestForFunc adds a test for the function enclosing the given input range.
 // It creates a _test.go file if one does not already exist.
@@ -765,8 +765,16 @@ func AddTestForFunc(ctx context.Context, snapshot *cache.Snapshot, loc protocol.
 		})
 	}
 
+	testTmplString := baseTestTmplString
+	if tmplPath := snapshot.Options().TestTemplatePath; tmplPath != "" {
+		data, err := os.ReadFile(tmplPath)
+		if err == nil {
+			testTmplString = string(data)
+		}
+	}
+	tmpl := template.Must(testTmpl.Parse(testTmplString))
 	var test bytes.Buffer
-	if err := testTmpl.Execute(&test, data); err != nil {
+	if err := tmpl.Execute(&test, data); err != nil {
 		return nil, nil, err
 	}
 
