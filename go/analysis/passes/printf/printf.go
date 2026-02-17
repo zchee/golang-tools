@@ -652,7 +652,7 @@ func callKind(pass *analysis.Pass, obj types.Object, res *Result) Kind {
 		}
 		if ok {
 			// well-known printf functions
-			if fullname(obj) == "fmt.Errorf" {
+			if fullname(obj) == "fmt.Errorf" || obj.Name() == "Errorf" {
 				kind = KindErrorf
 			} else if strings.HasSuffix(obj.Name(), "f") {
 				kind = KindPrintf
